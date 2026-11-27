@@ -147,7 +147,7 @@
     "title": "Merge and verify Google sign-in",
     "detail": "An earlier local implementation exists but is not present on audited main. Review, merge and verify separately if the team wants it.",
     "points": 3,
-    "stage": "ready",
+    "stage": "building",
     "createdByName": "Default"
   },
   {
