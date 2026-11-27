@@ -1,0 +1,299 @@
+[
+  {
+    "id": "foundation",
+    "title": "Django foundation & PostgreSQL",
+    "detail": "Sprint 1: Django app, database configuration and migrations. PR #1.",
+    "points": 5,
+    "stage": "done",
+    "createdByName": "Default"
+  },
+  {
+    "id": "login",
+    "title": "Password login & grader accounts",
+    "detail": "Django login/logout and rerunnable grader-account seed; covered by tests. PR #1.",
+    "points": 3,
+    "stage": "done",
+    "createdByName": "Default"
+  },
+  {
+    "id": "ab",
+    "title": "A/B test page & live statistics",
+    "detail": "Variant assignment, impressions, clicks and stats; team nicknames updated in PR #21.",
+    "points": 3,
+    "stage": "done",
+    "createdByName": "Default"
+  },
+  {
+    "id": "ci",
+    "title": "Automated tests on pull requests",
+    "detail": "GitHub Actions runs tests against Postgres. Local audit: all 26 Django tests passed. PR #2.",
+    "points": 3,
+    "stage": "done",
+    "createdByName": "Default"
+  },
+  {
+    "id": "deploy",
+    "title": "Separate staging & production environments",
+    "detail": "Sprint 2 report records both Render apps live with separate Neon databases. Deployment not independently rechecked during audit.",
+    "points": 3,
+    "stage": "done",
+    "createdByName": "Default"
+  },
+  {
+    "id": "prompts",
+    "title": "Team coding-agent prompt queue",
+    "detail": "Prompt template, queue and status log added in PR #4.",
+    "points": 2,
+    "stage": "done",
+    "createdByName": "Default"
+  },
+  {
+    "id": "production",
+    "title": "Create and view productions (US-1, part 1)",
+    "detail": "Production creation, creator becomes director, My Productions and membership-restricted details. PR #5; issue #7.",
+    "points": 5,
+    "stage": "done",
+    "issueNumber": 7,
+    "issueState": "OPEN",
+    "issueAssignees": [],
+    "issueLabels": [
+      "user story"
+    ],
+    "issueRelated": [
+      {
+        "number": 17,
+        "state": "CLOSED"
+      }
+    ],
+    "issueBody": "As a director, I want to create a production and invite my company with roles, so that everyone works from one place.\n\nAcceptance criteria:\n\n- A logged-in user who submits a title at `/productions/new/` becomes the director of that production.\n- A member sees that production on `/productions/`. Someone who is not a member gets 404.\n- A director can invite an existing account by email and assign one role: director, stage manager, actor, or crew. That person then sees the production with that role.\n- An actor who opens the invite form gets 404.\n\nCreating a production and hiding it from non-members shipped in https://github.com/tkg9/656Final-daunting-horizon/pull/5. Invites are still open.\n",
+    "createdByName": "Default"
+  },
+  {
+    "id": "permissions",
+    "title": "Production membership and script access control",
+    "detail": "Director, stage manager, actor and crew roles modeled. Non-members cannot view production; only directors and stage managers may edit scripts. PR #5.",
+    "points": 3,
+    "stage": "done",
+    "issueNumber": 7,
+    "issueState": "OPEN",
+    "issueAssignees": [],
+    "issueLabels": [
+      "user story"
+    ],
+    "issueRelated": [
+      {
+        "number": 17,
+        "state": "CLOSED"
+      }
+    ],
+    "issueBody": "As a director, I want to create a production and invite my company with roles, so that everyone works from one place.\n\nAcceptance criteria:\n\n- A logged-in user who submits a title at `/productions/new/` becomes the director of that production.\n- A member sees that production on `/productions/`. Someone who is not a member gets 404.\n- A director can invite an existing account by email and assign one role: director, stage manager, actor, or crew. That person then sees the production with that role.\n- An actor who opens the invite form gets 404.\n\nCreating a production and hiding it from non-members shipped in https://github.com/tkg9/656Final-daunting-horizon/pull/5. Invites are still open.\n",
+    "createdByName": "Default"
+  },
+  {
+    "id": "script",
+    "title": "Paste script and split into scenes (US-2)",
+    "detail": "Persist numbered scenes with headings and text; ACT/SCENE splitting and replacement tested. PR #5; issue #8. Line-level persistence is not yet built.",
+    "points": 8,
+    "stage": "done",
+    "issueNumber": 8,
+    "issueState": "CLOSED",
+    "issueAssignees": [],
+    "issueLabels": [
+      "user story"
+    ],
+    "issueRelated": [
+      {
+        "number": 18,
+        "state": "CLOSED"
+      }
+    ],
+    "issueBody": "As a director, I want to paste in the script and have it split into scenes, so that rehearsals and cues can refer to scenes.\n\nAcceptance criteria:\n\n- A director or stage manager can paste a script on the production's script page.\n- The script splits into scenes on lines that begin with ACT or SCENE. Text before the first heading becomes scene 1.\n- Replacing the script replaces the scenes.\n- An actor who posts a script gets 404.\n\nShipped in https://github.com/tkg9/656Final-daunting-horizon/pull/5.\n",
+    "createdByName": "Default"
+  },
+  {
+    "id": "demo",
+    "title": "Seed sample production",
+    "detail": "Rerunnable seed creates a demo production, two scenes, director and actor memberships; verified in tests.",
+    "points": 2,
+    "stage": "done",
+    "createdByName": "Default"
+  },
+  {
+    "id": "ai",
+    "title": "AI character breakdown (US-3, part 1)",
+    "detail": "OpenRouter extracts characters per scene when configured; rule-based fallback on no key or errors. PR #20; issue #9. HTTP calls mocked in tests.",
+    "points": 8,
+    "stage": "done",
+    "issueNumber": 10,
+    "issueState": "CLOSED",
+    "issueAssignees": [],
+    "issueLabels": [
+      "user story"
+    ],
+    "issueRelated": [],
+    "issueBody": "As a director, I want the character breakdown drafted by the model, so that I review a model draft instead of a text parse.\n\nAcceptance criteria:\n\n- With `OPENROUTER_API_KEY` set, `draft_breakdown` posts to `https://openrouter.ai/api/v1/chat/completions`, and the page says \"Drafted with the model.\"\n- The request sends the scene text and takes the key from the environment. The key is not written into the prompt.\n- With no key, or when the call fails, the page says \"Drafted from the script text\" and lists speakers found in the script.\n- Tests cover model JSON, fenced JSON, a failed call, and the no-key path. They do not call OpenRouter.\n\nPart of the script-breakdown story. Props, costumes, set pieces, and cues stay on that story.\n",
+    "createdByName": "Default"
+  },
+  {
+    "id": "audit",
+    "title": "Audit existing StageCraft components",
+    "detail": "Checked main d8c5392, user stories, models, views, routes, tests and sprint reports. All 26 local Django tests passed.",
+    "points": 2,
+    "stage": "done",
+    "createdByName": "Default"
+  },
+  {
+    "id": "google",
+    "title": "Merge and verify Google sign-in",
+    "detail": "An earlier local implementation exists but is not present on audited main. Review, merge and verify separately if the team wants it.",
+    "points": 3,
+    "stage": "ready",
+    "createdByName": "Default"
+  },
+  {
+    "id": "invites",
+    "title": "Invite company members with roles (US-1, part 2)",
+    "detail": "Invite by email and assign roles. Membership model exists, but invite workflow is not implemented. Issue #7.",
+    "points": 5,
+    "stage": "ready",
+    "issueNumber": 7,
+    "issueState": "OPEN",
+    "issueAssignees": [],
+    "issueLabels": [
+      "user story"
+    ],
+    "issueRelated": [
+      {
+        "number": 17,
+        "state": "CLOSED"
+      }
+    ],
+    "issueBody": "As a director, I want to create a production and invite my company with roles, so that everyone works from one place.\n\nAcceptance criteria:\n\n- A logged-in user who submits a title at `/productions/new/` becomes the director of that production.\n- A member sees that production on `/productions/`. Someone who is not a member gets 404.\n- A director can invite an existing account by email and assign one role: director, stage manager, actor, or crew. That person then sees the production with that role.\n- An actor who opens the invite form gets 404.\n\nCreating a production and hiding it from non-members shipped in https://github.com/tkg9/656Final-daunting-horizon/pull/5. Invites are still open.\n",
+    "createdByName": "Default"
+  },
+  {
+    "id": "casting",
+    "title": "Cast actors in roles (US-4)",
+    "detail": "Link actors to script characters and their scenes. Issue #11.",
+    "points": 5,
+    "stage": "ready",
+    "issueNumber": 11,
+    "issueState": "OPEN",
+    "issueAssignees": [],
+    "issueLabels": [
+      "user story"
+    ],
+    "issueRelated": [],
+    "issueBody": "As a director, I want to cast actors in roles, so that each actor sees their own scenes.\n\nAcceptance criteria:\n\n- A director can name a character and assign it to a member whose role is actor.\n- An actor's page lists the scenes where that character speaks, and no others.\n- Someone who is not a member cannot open the casting page.\n",
+    "createdByName": "Default"
+  },
+  {
+    "id": "ai-expanded",
+    "title": "Expand AI breakdown and review/save (US-3, part 2)",
+    "detail": "Draft props, costumes, set pieces and lighting/sound cues; allow director to correct and save suggestions. Current implementation only drafts characters. Issue #9.",
+    "points": 8,
+    "stage": "ready",
+    "issueNumber": 9,
+    "issueState": "OPEN",
+    "issueAssignees": [],
+    "issueLabels": [
+      "user story"
+    ],
+    "issueRelated": [
+      {
+        "number": 19,
+        "state": "CLOSED"
+      }
+    ],
+    "issueBody": "As a director, I want an AI draft of the script breakdown (characters per scene, props, costumes, set pieces, cues), so that I review it instead of building it by hand.\n\nAcceptance criteria:\n\n- Only a member can open the breakdown page.\n- The server calls OpenRouter. Browser JavaScript does not.\n- `OPENROUTER_API_KEY` stays in the environment and never enters git.\n- Tests mock the HTTP call and do not call OpenRouter.\n- The draft lists characters per scene, props, costumes, set pieces, and cues.\n- If the call fails, the page still shows a draft parsed from the script text.\n\nThe character list is the Sprint 2 slice. Props, costumes, set pieces, and cues are still open.\n",
+    "createdByName": "Default"
+  },
+  {
+    "id": "rehearsal",
+    "title": "Schedule rehearsals (US-5)",
+    "detail": "Select scenes, schedule sessions and determine which actors must attend; track scene readiness. Issue #12.",
+    "points": 8,
+    "stage": "ready",
+    "issueNumber": 12,
+    "issueState": "OPEN",
+    "issueAssignees": [],
+    "issueLabels": [
+      "user story"
+    ],
+    "issueRelated": [],
+    "issueBody": "As a director, I want to schedule rehearsals for chosen scenes and see who must attend, so that I don't call people who aren't needed.\n\nAcceptance criteria:\n\n- A director can create a rehearsal with a start time and one or more scenes.\n- The rehearsal lists the actors cast in those scenes.\n- Actors who are not in those scenes are left off the call list.\n",
+    "createdByName": "Default"
+  },
+  {
+    "id": "attendance",
+    "title": "Record rehearsal attendance (US-6)",
+    "detail": "Stage manager records attendance and tracks missed rehearsals. Issue #13.",
+    "points": 3,
+    "stage": "backlog",
+    "issueNumber": 13,
+    "issueState": "OPEN",
+    "issueAssignees": [],
+    "issueLabels": [
+      "user story"
+    ],
+    "issueRelated": [],
+    "issueBody": "As a stage manager, I want to take attendance at a rehearsal, so that we track who missed what.\n\nAcceptance criteria:\n\n- A stage manager can mark each called actor present or absent.\n- A director can view that record.\n- An actor cannot change attendance.\n",
+    "createdByName": "Default"
+  },
+  {
+    "id": "actor",
+    "title": "Actor dashboard (US-7)",
+    "detail": "Show assigned role, scenes, lines, rehearsal schedule and notes. Issue #14.",
+    "points": 5,
+    "stage": "backlog",
+    "issueNumber": 14,
+    "issueState": "OPEN",
+    "issueAssignees": [],
+    "issueLabels": [
+      "user story"
+    ],
+    "issueRelated": [],
+    "issueBody": "As an actor, I want to see my scenes, lines, rehearsal schedule and notes, so that I come prepared.\n\nAcceptance criteria:\n\n- An actor sees their character, the scenes they appear in, the text of those scenes, upcoming rehearsals, and notes from the director.\n- They do not see another actor's notes.\n",
+    "createdByName": "Default"
+  },
+  {
+    "id": "cue",
+    "title": "Script-line cue sheet and printing (US-8)",
+    "detail": "Persist line-level references and attach lighting, sound and set changes; print cue sheets. Issue #15.",
+    "points": 8,
+    "stage": "backlog",
+    "issueNumber": 15,
+    "issueState": "OPEN",
+    "issueAssignees": [],
+    "issueLabels": [
+      "user story"
+    ],
+    "issueRelated": [],
+    "issueBody": "As a stage manager, I want to attach lighting, sound and set cues to script lines and print a cue sheet, so that the crew can run the show.\n\nAcceptance criteria:\n\n- A stage manager can attach a lighting, sound, or set cue to a line.\n- A cue sheet lists those cues in script order.\n- An actor cannot edit cues.\n",
+    "createdByName": "Default"
+  },
+  {
+    "id": "inventory",
+    "title": "Props, costumes, set & task tracker (US-9)",
+    "detail": "Track production items and tasks with status and responsibility. Issue #16.",
+    "points": 5,
+    "stage": "backlog",
+    "issueNumber": 16,
+    "issueState": "OPEN",
+    "issueAssignees": [],
+    "issueLabels": [
+      "user story"
+    ],
+    "issueRelated": [],
+    "issueBody": "As a stage manager, I want to track props, costumes, set items and tasks, so that nothing is missing on opening night.\n\nAcceptance criteria:\n\n- A stage manager can add an item with a type (prop, costume, set, or task) and a status.\n- The list can be filtered by type.\n- An actor can view the list and cannot edit it.\n",
+    "createdByName": "Default"
+  },
+  {
+    "id": "qa",
+    "title": "Integration testing & final demo",
+    "detail": "Verify actual staging/production flows, all role permissions and AI review workflow after remaining stories ship; prepare final demo.",
+    "points": 5,
+    "stage": "backlog",
+    "createdByName": "Default"
+  }
+]
