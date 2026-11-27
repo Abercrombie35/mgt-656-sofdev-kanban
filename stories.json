@@ -295,5 +295,23 @@
     "points": 5,
     "stage": "backlog",
     "createdByName": "Default"
+  },
+  {
+    "id": "bb46ad91-557c-4320-b915-6497752f69ff",
+    "title": "New Domain",
+    "detail": "The website can be accessed by stagecraft.stream",
+    "points": 2,
+    "stage": "building",
+    "createdByName": "Thomas Gould",
+    "createdByLogin": "tkg9",
+    "createdAt": "2026-11-27T16:29:10.986Z",
+    "issueManaged": true,
+    "issuePending": {
+      "create": true,
+      "state": true,
+      "content": true,
+      "actor": "tkg9",
+      "signature": "o_gl1fXXHU45AP_LhDlLa44-whv2bbCgFLtJ5wEoz8w"
+    }
   }
 ]
