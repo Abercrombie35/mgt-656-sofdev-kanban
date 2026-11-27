@@ -229,7 +229,7 @@
     "title": "Record rehearsal attendance (US-6)",
     "detail": "Stage manager records attendance and tracks missed rehearsals. Issue #13.",
     "points": 3,
-    "stage": "backlog",
+    "stage": "wip",
     "issueNumber": 13,
     "issueState": "OPEN",
     "issueAssignees": [],
