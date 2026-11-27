@@ -1,6 +1,7 @@
 import { createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { seed } from '../lib/seed.mjs';
 import { applyChange } from '../lib/model.mjs';
+import { syncConfigured, openIssueService, queueIssue, desiredIssueState, matchingIssue, managedBody, reconcileIssues } from '../lib/live-issues.mjs';
 
 const repo = 'Abercrombie35/mgt-656-sofdev-kanban';
 const branch = 'board-data';
@@ -59,6 +60,84 @@ async function board(c) {
   if(!Array.isArray(stories)) throw new Error('Invalid board storage.');
   return {stories,revision:file.sha};
 }
+class BoardConflict extends Error {}
+function pendingSignature(card,c){
+  const {signature:ignored,...pending}=card.issuePending||{};
+  return signature(JSON.stringify({
+    id:card.id,title:card.title,detail:card.detail,stage:card.stage,
+    issueNumber:pending.create?null:card.issueNumber||null,
+    issueManaged:!!card.issueManaged,createdByName:card.createdByName||null,pending
+  }),c);
+}
+function verifiedPending(card,c){
+  const signed=card?.issuePending?.signature;
+  if(typeof signed!=='string')return false;
+  const expected=pendingSignature(card,c);
+  return signed.length===expected.length&&timingSafeEqual(Buffer.from(signed),Buffer.from(expected));
+}
+async function saveBoard(c,current,stories,message){
+  const data={message,branch,content:Buffer.from(JSON.stringify(stories,null,2)+'\n').toString('base64')};
+  if(current.revision)data.sha=current.revision;
+  const saved=await github(`/repos/${repo}/contents/${path}`,c.token,{method:'PUT',body:JSON.stringify(data)});
+  if(saved.status===409||saved.status===422)throw new BoardConflict();
+  if(!saved.ok)throw new Error('Unable to save changes to GitHub.');
+  return {stories,revision:(await saved.json()).content.sha};
+}
+async function syncBoard(c){
+  let current=await board(c);
+  if(!syncConfigured())return {...current,syncStatus:'not-configured'};
+  // A short optimistic lease prevents overlapping pollers from both creating
+  // an issue for the same card. Retrying finds its unique body marker.
+  if(current.stories.some(s=>s.issuePending&&s.issueLease?.expires>Date.now()))return {...current,syncStatus:'pending'};
+  const service=await openIssueService(c.token);
+  let issues=await service.list();
+  let stories=reconcileIssues(current.stories,issues);
+  const pending=stories.find(s=>s.issuePending);
+  if(!pending){
+    if(JSON.stringify(stories)!==JSON.stringify(current.stories))
+      current=await saveBoard(c,current,stories,'Synchronize StageCraft GitHub issues');
+    return {...current,syncStatus:'synced'};
+  }
+  if(!verifiedPending(current.stories.find(s=>s.id===pending.id),c)||
+     !await service.canWrite(pending.issuePending.actor))throw new Error('The pending edit was not made by an authorized source-repository collaborator.');
+  const lease={id:randomUUID(),expires:Date.now()+90000};
+  stories=stories.map(s=>s.id===pending.id?{...s,issueLease:lease}:s);
+  current=await saveBoard(c,current,stories,'Claim StageCraft issue sync');
+  try{
+    let issue=matchingIssue(pending,issues);
+    if(!issue){
+      if(!pending.issuePending.create)throw new Error('Linked GitHub issue no longer exists.');
+      issue=await service.create(pending);
+    }
+    const desired=desiredIssueState(stories,{...pending,issueNumber:issue.number});
+    const patch={};
+    if(pending.issuePending.state&&issue.state.toLowerCase()!==desired)patch.state=desired;
+    if(pending.issueManaged&&pending.issuePending.content){
+      if(issue.title!==pending.title)patch.title=pending.title;
+      if(issue.body!==managedBody(pending))patch.body=managedBody(pending);
+    }
+    if(Object.keys(patch).length)issue=await service.update(issue.number,patch);
+    issues=[...issues.filter(i=>i.number!==issue.number),issue];
+    stories=stories.map(s=>{
+      if(s.id!==pending.id)return s;
+      const {issuePending,issueLease,...rest}=s;
+      return {...rest,issueNumber:issue.number,issueState:issue.state};
+    });
+    stories=reconcileIssues(stories,issues);
+    current=await saveBoard(c,current,stories,'Sync linked GitHub issue #'+issue.number);
+    return {...current,syncStatus:stories.some(s=>s.issuePending)?'pending':'synced'};
+  }catch(error){
+    // Do not discard a pending operation on provider failure. Release its
+    // lease if this revision still exists, so the next poll can retry.
+    if(!(error instanceof BoardConflict)){
+      try{await saveBoard(c,current,current.stories.map(s=>{
+        if(s.id!==pending.id)return s;
+        const {issueLease,...rest}=s;return rest;
+      }),'Release failed issue sync lease');}catch{}
+    }
+    throw error;
+  }
+}
 export default {
   async fetch(req) {
     try {
@@ -92,7 +171,15 @@ export default {
       const login=session(req,c);
       if(!login) return json({error:'Sign in with GitHub to continue.'},401);
       if(!await permission(login,c)) return json({error:'Repository write access is required.'},403);
-      if(req.method==='GET') return json({...await board(c),login});
+      if(req.method==='GET') return json({...await board(c),login,syncStatus:syncConfigured()?'available':'not-configured'});
+      if(req.method==='POST'&&action==='sync'){
+        try{return json({...await syncBoard(c),login});}
+        catch(e){
+          if(e instanceof BoardConflict)return json({error:'Another teammate is syncing. Refresh and retry.'},409);
+          console.error('Issue sync failed:',e.message);
+          return json({error:'GitHub issue sync unavailable. Board changes remain saved; retry after checking the integration.'},503);
+        }
+      }
       if(req.method!=='POST') return json({error:'Method not allowed.'},405);
       if(!req.headers.get('content-type')?.includes('application/json')) return json({error:'JSON required.'},415);
       const raw=await req.text();
@@ -101,6 +188,8 @@ export default {
       try { change=JSON.parse(raw); } catch { return json({error:'Invalid request.'},400); }
       const current=await board(c);
       if(change.revision!==current.revision) return json({error:'The board changed. Refresh and try again.'},409);
+      const existing=current.stories.find(s=>s.id===change.id);
+      if(existing?.issuePending&&!verifiedPending(existing,c))return json({error:'This card has an invalid pending issue update. Ask the board administrator to review it.'},409);
       let stories;
       let author;
       if(change?.type==='add'){
@@ -109,13 +198,18 @@ export default {
         const name=(await profile.json()).name;
         author={name:typeof name==='string'&&name.trim()?name.trim().slice(0,200):'GitHub display name not set',login,createdAt:new Date().toISOString()};
       }
-      try { stories=applyChange(current.stories,change,randomUUID(),author); } catch(e) { return json({error:e.message},400); }
-      const data={message:`Update board by @${login}`,branch,content:Buffer.from(JSON.stringify(stories,null,2)+'\n').toString('base64')};
-      if(current.revision) data.sha=current.revision;
-      const saved=await github(`/repos/${repo}/contents/${path}`,c.token,{method:'PUT',body:JSON.stringify(data)});
-      if(saved.status===409 || saved.status===422) return json({error:'Unable to save this revision. Refresh and try again.'},409);
-      if(!saved.ok) return json({error:'Unable to save changes to GitHub.'},502);
-      return json({stories,revision:(await saved.json()).content.sha,login});
+      const id=randomUUID();
+      try {
+        stories=queueIssue(current.stories,applyChange(current.stories,change,id,author),change,id,login);
+        const changedId=change.type==='add'?id:change.id;
+        stories=stories.map(s=>s.id===changedId&&s.issuePending?{
+          ...s,issuePending:{...s.issuePending,signature:pendingSignature(s,c)}
+        }:s);
+      } catch(e) { return json({error:e.message},400); }
+      let saved;
+      try{saved=await saveBoard(c,current,stories,`Update board by @${login}`);}
+      catch(e){if(e instanceof BoardConflict)return json({error:'Unable to save this revision. Refresh and try again.'},409);throw e;}
+      return json({...saved,login,syncStatus:syncConfigured()?'pending':'not-configured'});
     } catch(e) {
       console.error('Board operation failed:',e.message);
       return json({error:'Board unavailable. Check deployment configuration or try again later.'},503);

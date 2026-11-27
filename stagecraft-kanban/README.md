@@ -43,3 +43,26 @@ repository owner's GitHub and Vercel access.
 
 Run local unit tests with `npm test`. The UI intentionally remains locked
 when the authentication and storage backend has not been configured.
+
+## Two-way GitHub issue sync
+
+The source repository is `tkg9/656Final-daunting-horizon`. This is separate
+from the existing board's storage-and-auth token. Recommended: configure a
+GitHub App with repository **Issues: Read and write**, Metadata read-only,
+no other permissions, and no webhook. Allow installation by other accounts;
+the source repository owner must install the app for that repository only.
+Set the app's App ID and PEM private key in Vercel production as
+`SOURCE_GITHUB_APP_ID` and `SOURCE_GITHUB_APP_PRIVATE_KEY`, then redeploy.
+Alternatively, the source repository owner can provision a fine-grained
+repository-only token with Issues read/write as `SOURCE_GITHUB_TOKEN`.
+Never put those credentials in repository files.
+
+Signed-in collaborators with write permission on the source repository can
+create new issues through Kanban. The board saves a pending operation before
+sending it; a short lease and unique issue marker support retry and deduplication.
+The board synchronizes at login, after changes, every minute while open, and
+on the Sync GitHub issues button. Closing/reopening reflects in both systems.
+For split stories sharing an issue, every linked card must be Done to close it.
+New Kanban-generated issues also synchronize title and description; legacy
+issues retain the existing acceptance criteria and board-specific notes.
+The provider is not called for writes until the source authorization is set.
