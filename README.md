@@ -1,4 +1,4 @@
-# MGT 656 Software Development: LEGO City Sprint
+# MGT 656 Software Development: Daunting Horizon
 
 This repository is the shared workspace for our LEGO City Scrum sprint.
 
