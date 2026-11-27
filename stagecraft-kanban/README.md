@@ -49,7 +49,7 @@ when the authentication and storage backend has not been configured.
 The source repository is `tkg9/656Final-daunting-horizon`. This is separate
 from the existing board's storage-and-auth token. Recommended: configure a
 GitHub App with repository **Issues: Read and write**, Metadata read-only,
-no other permissions, and no webhook. Allow installation by other accounts;
+ no other permissions. Allow installation by other accounts;
 the source repository owner must install the app for that repository only.
 Set the app's App ID and PEM private key in Vercel production as
 `SOURCE_GITHUB_APP_ID` and `SOURCE_GITHUB_APP_PRIVATE_KEY`, then redeploy.
@@ -66,3 +66,16 @@ For split stories sharing an issue, every linked card must be Done to close it.
 New Kanban-generated issues also synchronize title and description; legacy
 issues retain the existing acceptance criteria and board-specific notes.
 The provider is not called for writes until the source authorization is set.
+
+### Automatic synchronization while the board is closed
+
+Create a separate 32-byte random webhook secret (for example,
+`openssl rand -hex 32`). Add it to the Vercel production environment as
+`SOURCE_GITHUB_WEBHOOK_SECRET`. In the StageCraft Kanban Sync GitHub App
+settings, enable the webhook, set its URL to
+`https://mgt-656-sofdev-kanban.vercel.app/api/board?action=webhook`,
+and enter the identical secret. Subscribe to **Issues** events only.
+Redeploy Vercel before enabling the webhook. GitHub issue changes now trigger
+server-side synchronization without a browser tab; browser polling remains
+a fallback. Board edits also attempt server-side synchronization immediately
+after being saved.

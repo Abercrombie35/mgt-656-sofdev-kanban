@@ -1,4 +1,4 @@
-export const stages = ['backlog','ready','building','done'];
+export const stages = ['backlog','wip','ready','building','done'];
 export const points = [1,2,3,5,8,13];
 export function validateCard(card) {
   if (!card || typeof card.title !== 'string' || !card.title.trim() || card.title.length > 120 ||

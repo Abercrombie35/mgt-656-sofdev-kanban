@@ -22,7 +22,7 @@ const merged=seed.map(s=>{
 const custom=previous.filter(s=>!known.has(s.id));
 const result=[...merged,...custom];
 console.log('Audited cards:',merged.length,'; custom cards preserved:',custom.length);
-for(const stage of ['backlog','ready','building','done'])console.log(stage+': '+result.filter(s=>s.stage===stage).length);
+for(const stage of ['backlog','wip','ready','building','done'])console.log(stage+': '+result.filter(s=>s.stage===stage).length);
 for(const item of merged){
   const old=byId.get(item.id);
   if(!old||old.stage!==item.stage)console.log((old?.stage||'NEW')+' -> '+item.stage+': '+item.title);

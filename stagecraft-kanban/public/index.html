@@ -20,7 +20,7 @@
     .route div:last-child { border-right:0; }
     .route div.active { background:#eaf3ff; }
     .route small { display:block; color:var(--muted); font-size:11px; }
-    main { display:grid; grid-template-columns:280px minmax(720px,1fr); gap:24px; padding:0 32px 32px; }
+    main { display:grid; grid-template-columns:240px minmax(0,1fr); gap:20px; padding:0 24px 32px; }
     .composer { border:1px solid var(--line); border-radius:8px; height:max-content; }
     .composer h2 { padding:12px 14px; border-bottom:1px solid var(--line); }
     .form { padding:14px; display:grid; gap:10px; }
@@ -33,14 +33,14 @@
     button:hover { filter:brightness(.97); }
     .board-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
     .board-head span { color:var(--muted); font-size:12px; }
-    .board { display:grid; grid-template-columns:repeat(4,minmax(180px,1fr)); gap:12px; }
+    .board { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; }
     .lane { min-height:370px; background:var(--panel); padding:10px; border-top:3px solid #a6b3c2; }
     .lane-head { display:flex; justify-content:space-between; gap:6px; align-items:start; padding-bottom:10px; }
     .lane-head small { display:block; color:var(--muted); font-size:11px; }
     .points { font-size:11px; color:var(--muted); border:1px solid #cbd5e1; border-radius:999px; padding:2px 6px; background:#fff; }
     .notes { display:grid; gap:10px; }
     .note { border:1px solid rgba(57,76,96,.22); border-radius:6px; padding:11px; background:var(--yellow); }
-    .note.ready { background:var(--blue); } .note.building { background:var(--pink); } .note.done { background:var(--green); }
+    .note.wip { background:#e8ddff; } .note.ready { background:var(--blue); } .note.building { background:var(--pink); } .note.done { background:var(--green); }
     .note-top { display:flex; gap:6px; align-items:start; justify-content:space-between; }
     .note strong { font-size:13px; line-height:1.25; }
     .note p { margin:8px 0 10px; color:#435468; font-size:12px; }
@@ -58,7 +58,8 @@
     button:disabled { opacity:.5; cursor:not-allowed; }
     .note p { white-space:pre-wrap; overflow-wrap:anywhere; }
     .note strong { overflow-wrap:anywhere; }
-    @media(max-width:1050px) { main { grid-template-columns:1fr; } .board { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media(max-width:1250px) { main { grid-template-columns:1fr; } }
+    @media(max-width:900px) { .board { grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media(max-width:600px) { header { flex-direction:column; gap:12px; padding:18px; } .route { margin:16px; grid-template-columns:repeat(2,1fr); } main { padding:0 16px 24px; } .board { grid-template-columns:1fr; } .session { padding:10px 16px; } }
   </style>
 </head>
@@ -72,10 +73,10 @@
     <div><small>Milestone 1</small><b>Foundation & login</b></div><div class="active"><small>Milestone 2</small><b>Production workflows</b></div><div><small>Milestone 3</small><b>Rehearsals & cues</b></div><div><small>Milestone 4</small><b>AI & final QA</b></div>
   </section>
   <main>
-    <aside class="composer"><h2>New sticky note</h2><form class="form" id="new-story"><input id="new-title" required maxlength="120" placeholder="User story title"><textarea id="new-detail" maxlength="2000" placeholder="As a director, actor or crew member, I want... so that..."></textarea><div class="form-row"><select id="new-points"><option>1</option><option>2</option><option selected>3</option><option>5</option><option>8</option><option>13</option></select><select id="new-stage"><option value="backlog">Backlog</option><option value="ready">Ready</option><option value="building">Building</option><option value="done">Done</option></select></div><button class="primary" disabled>Add sticky note</button></form></aside>
+    <aside class="composer"><h2>New sticky note</h2><form class="form" id="new-story"><input id="new-title" required maxlength="120" placeholder="User story title"><textarea id="new-detail" maxlength="2000" placeholder="As a director, actor or crew member, I want... so that..."></textarea><div class="form-row"><select id="new-points"><option>1</option><option>2</option><option selected>3</option><option>5</option><option>8</option><option>13</option></select><select id="new-stage"><option value="backlog">Backlog</option><option value="wip">WIP</option><option value="ready">Ready</option><option value="building">Building</option><option value="done">Done</option></select></div><button class="primary" disabled>Add sticky note</button></form></aside>
     <section><div class="board-head"><h2>Sticky-note board</h2><span>Edit a note or move it through the sprint.</span></div><div class="board" id="board"></div></section>
   </main>
-  <dialog id="editor"><form method="dialog"><div class="dialog-title">Edit sticky note</div><div class="dialog-body"><input id="edit-title" required><textarea id="edit-detail"></textarea><div class="form-row"><select id="edit-points"><option>1</option><option>2</option><option>3</option><option>5</option><option>8</option><option>13</option></select><select id="edit-stage"><option value="backlog">Backlog</option><option value="ready">Ready</option><option value="building">Building</option><option value="done">Done</option></select></div></div><div class="dialog-actions"><button value="cancel" class="secondary">Cancel</button><button value="save" class="primary">Save sticky</button></div></form></dialog>
+  <dialog id="editor"><form method="dialog"><div class="dialog-title">Edit sticky note</div><div class="dialog-body"><input id="edit-title" required><textarea id="edit-detail"></textarea><div class="form-row"><select id="edit-points"><option>1</option><option>2</option><option>3</option><option>5</option><option>8</option><option>13</option></select><select id="edit-stage"><option value="backlog">Backlog</option><option value="wip">WIP</option><option value="ready">Ready</option><option value="building">Building</option><option value="done">Done</option></select></div></div><div class="dialog-actions"><button value="cancel" class="secondary">Cancel</button><button value="save" class="primary">Save sticky</button></div></form></dialog>
   <script src="/board.js" defer></script>
 </body>
 </html>

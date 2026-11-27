@@ -9,12 +9,12 @@ const run=(cmd,args,cwd)=>execFileSync(cmd,args,{cwd,encoding:'utf8',maxBuffer:1
 run('git',['clone','--branch','main','https://github.com/Abercrombie35/mgt-656-sofdev-kanban.git',temp]);
 const app=existsSync(join(temp,'stagecraft-kanban','api','board.mjs'))?join(temp,'stagecraft-kanban'):temp;
 if(!existsSync(join(app,'api','board.mjs')))throw new Error('Kanban application not found; nothing was pushed.');
-const files=['api/board.mjs','public/index.html','public/board.js','lib/live-issues.mjs','lib/live-issues.test.mjs','lib/publish-live-sync.mjs','README.md'];
+const files=['api/board.mjs','public/index.html','public/board.js','lib/model.mjs','lib/model.test.mjs','lib/live-issues.mjs','lib/live-issues.test.mjs','lib/webhook.mjs','lib/webhook.test.mjs','lib/sync-audit.mjs','lib/publish-live-sync.mjs','README.md'];
 for(const f of files)copyFileSync(join(source,f),join(app,f));
 console.log(run('npm',['test'],app));
 run('git',['add','--',...files.map(f=>app===temp?f:'stagecraft-kanban/'+f)],temp);
 if(run('git',['diff','--cached','--name-only'],temp)){
-  console.log(run('git',['commit','-m','Add two-way StageCraft issue synchronization'],temp));
+  console.log(run('git',['commit','-m','Add WIP lane and automatic GitHub issue webhooks'],temp));
   console.log(run('git',['push'],temp));
 }else console.log('Already up to date.');
 console.log('Published main. Set source-repository credentials in Vercel and redeploy to activate synchronization.');

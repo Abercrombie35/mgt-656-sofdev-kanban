@@ -1,4 +1,4 @@
-const lanes=[['backlog','Backlog','Ideas'],['ready','Ready','Next up'],['building','Building','In progress'],['done','Done','Shipped']];
+const lanes=[['backlog','Backlog','Ideas'],['wip','WIP','Work in progress'],['ready','Ready','Next up'],['building','Building','In progress'],['done','Done','Shipped']];
 let stories=[], revision=null, login=null, busy=false, editing=null, editRevision=null, syncEnabled=false;
 const $=id=>document.getElementById(id);
 const feedback=message=>{$('feedback').textContent=message;};
@@ -26,7 +26,7 @@ function render(){
   const disabled=busy||!login?'disabled':'';
   $('board').innerHTML=lanes.map(([id,label,cue],i)=>{
     const cards=stories.filter(s=>s.stage===id),pts=cards.reduce((n,s)=>n+s.points,0);
-    return `<div class="lane"><div class="lane-head"><div><b>${label}</b><small>${cue}</small></div><span class="points">${pts} pts</span></div><div class="notes">${cards.map((s)=>`<article class="note ${id}"><div class="note-top"><strong>${escape(s.title)}</strong><span class="points">${escape(s.points)} pts</span></div>${authorLabel(s)}<p>${escape(s.detail)}</p>${issueLink(s)}<div class="note-actions">${i?`<button ${disabled} data-action="move" data-id="${escape(s.id)}" data-stage="${lanes[i-1][0]}">Back</button>`:''}<button ${disabled} data-action="edit" data-id="${escape(s.id)}">Edit</button>${i<3?`<button ${disabled} class="move" data-action="move" data-id="${escape(s.id)}" data-stage="${lanes[i+1][0]}">Move to ${lanes[i+1][1]}</button>`:''}</div></article>`).join('')}</div></div>`;
+    return `<div class="lane"><div class="lane-head"><div><b>${label}</b><small>${cue}</small></div><span class="points">${pts} pts</span></div><div class="notes">${cards.map((s)=>`<article class="note ${id}"><div class="note-top"><strong>${escape(s.title)}</strong><span class="points">${escape(s.points)} pts</span></div>${authorLabel(s)}<p>${escape(s.detail)}</p>${issueLink(s)}<div class="note-actions">${i?`<button ${disabled} data-action="move" data-id="${escape(s.id)}" data-stage="${lanes[i-1][0]}">Back</button>`:''}<button ${disabled} data-action="edit" data-id="${escape(s.id)}">Edit</button>${i<lanes.length-1?`<button ${disabled} class="move" data-action="move" data-id="${escape(s.id)}" data-stage="${lanes[i+1][0]}">Move to ${lanes[i+1][1]}</button>`:''}</div></article>`).join('')}</div></div>`;
   }).join('');
 }
 async function getBoard({quiet=false}={}){
@@ -57,8 +57,8 @@ async function save(change,expected=revision){
       return false;
     }
     ({stories,revision,login}=data);syncEnabled=data.syncStatus!=='not-configured';
-    feedback(syncEnabled?'Board saved; syncing linked issue…':'Board saved; issue synchronization awaits setup.');
-    if(syncEnabled)queueMicrotask(()=>syncNow());
+    feedback(data.syncStatus==='synced'?'Board and GitHub issues synchronized.':syncEnabled?'Board saved; syncing linked issue…':'Board saved; issue synchronization awaits setup.');
+    if(data.syncStatus==='pending')queueMicrotask(()=>syncNow());
     return true;
   }catch{feedback('Connection lost. Your change was not confirmed. Refresh before retrying.');return false;}
   finally{busy=false;render();}

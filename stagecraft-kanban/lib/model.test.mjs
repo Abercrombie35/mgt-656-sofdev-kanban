@@ -29,3 +29,11 @@ test('author is set by server and cannot be changed via card edit',()=>{
   assert.equal(edited[0].createdByName,'Real Name');
   assert.equal(edited[0].createdByLogin,'example');
 });
+test('WIP is a valid stage for adding, editing and moving cards',()=>{
+  const card={title:'First task',detail:'Details',points:3,stage:'wip'};
+  const added=applyChange([],{type:'add',card},'w');
+  assert.equal(added[0].stage,'wip');
+  const moved=applyChange(added,{type:'move',id:'w',stage:'ready'});
+  assert.equal(moved[0].stage,'ready');
+  assert.equal(applyChange(moved,{type:'edit',id:'w',card})[0].stage,'wip');
+});

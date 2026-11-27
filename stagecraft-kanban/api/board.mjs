@@ -2,6 +2,7 @@ import { createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypt
 import { seed } from '../lib/seed.mjs';
 import { applyChange } from '../lib/model.mjs';
 import { syncConfigured, openIssueService, queueIssue, desiredIssueState, matchingIssue, managedBody, reconcileIssues } from '../lib/live-issues.mjs';
+import {verifyWebhook,isSourceIssueEvent} from '../lib/webhook.mjs';
 
 const repo = 'Abercrombie35/mgt-656-sofdev-kanban';
 const branch = 'board-data';
@@ -142,6 +143,28 @@ export default {
   async fetch(req) {
     try {
       const c=config(), action=new URL(req.url).searchParams.get('action');
+      if(req.method==='POST'&&action==='webhook'){
+        const secret=process.env.SOURCE_GITHUB_WEBHOOK_SECRET;
+        if(!secret)return json({error:'Webhook not configured.'},503);
+        if(Number(req.headers.get('content-length'))>1000000)return json({error:'Payload too large.'},413);
+        const body=Buffer.from(await req.arrayBuffer());
+        if(body.length>1000000)return json({error:'Payload too large.'},413);
+        if(!verifyWebhook(body,req.headers.get('x-hub-signature-256'),secret))return json({error:'Invalid webhook signature.'},401);
+        let payload;
+        try{payload=JSON.parse(body.toString('utf8'));}catch{return json({error:'Invalid JSON.'},400);}
+        const event=req.headers.get('x-github-event');
+        if(event==='ping')return json({ok:true});
+        if(!isSourceIssueEvent(event,payload))return json({ok:true,ignored:true});
+        if(!syncConfigured())return json({error:'Source issue authorization is not configured.'},503);
+        try{
+          let result;
+          try{result=await syncBoard(c);}catch(e){if(!(e instanceof BoardConflict))throw e;result=await syncBoard(c);}
+          return json({ok:true,syncStatus:result.syncStatus});
+        }catch(e){
+          console.error('Automatic issue webhook sync failed:',e.message);
+          return json({error:'Issue synchronization failed. Retry delivery.'},503);
+        }
+      }
       if(req.method==='GET' && action==='login') {
         const state=randomBytes(32).toString('hex');
         const target=new URL('https://github.com/login/oauth/authorize');
@@ -209,7 +232,17 @@ export default {
       let saved;
       try{saved=await saveBoard(c,current,stories,`Update board by @${login}`);}
       catch(e){if(e instanceof BoardConflict)return json({error:'Unable to save this revision. Refresh and try again.'},409);throw e;}
-      return json({...saved,login,syncStatus:syncConfigured()?'pending':'not-configured'});
+      if(syncConfigured()){
+        // Persist the board change first, then attempt the queued issue write
+        // automatically on the server even if the browser closes.
+        try{return json({...await syncBoard(c),login});}
+        catch(e){
+          console.error('Automatic issue sync deferred:',e.message);
+          try{saved=await board(c);}catch{}
+          return json({...saved,login,syncStatus:'pending'});
+        }
+      }
+      return json({...saved,login,syncStatus:'not-configured'});
     } catch(e) {
       console.error('Board operation failed:',e.message);
       return json({error:'Board unavailable. Check deployment configuration or try again later.'},503);
