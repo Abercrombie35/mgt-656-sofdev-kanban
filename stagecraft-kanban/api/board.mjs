@@ -102,7 +102,14 @@ export default {
       const current=await board(c);
       if(change.revision!==current.revision) return json({error:'The board changed. Refresh and try again.'},409);
       let stories;
-      try { stories=applyChange(current.stories,change,randomUUID()); } catch(e) { return json({error:e.message},400); }
+      let author;
+      if(change?.type==='add'){
+        const profile=await github('/users/'+encodeURIComponent(login),c.token);
+        if(!profile.ok) return json({error:'Unable to verify your GitHub display name. Try again.'},502);
+        const name=(await profile.json()).name;
+        author={name:typeof name==='string'&&name.trim()?name.trim().slice(0,200):'GitHub display name not set',login,createdAt:new Date().toISOString()};
+      }
+      try { stories=applyChange(current.stories,change,randomUUID(),author); } catch(e) { return json({error:e.message},400); }
       const data={message:`Update board by @${login}`,branch,content:Buffer.from(JSON.stringify(stories,null,2)+'\n').toString('base64')};
       if(current.revision) data.sha=current.revision;
       const saved=await github(`/repos/${repo}/contents/${path}`,c.token,{method:'PUT',body:JSON.stringify(data)});

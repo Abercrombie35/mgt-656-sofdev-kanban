@@ -6,11 +6,13 @@ export function validateCard(card) {
       !points.includes(card.points) || !stages.includes(card.stage)) throw new Error('Invalid sticky note.');
   return {title:card.title.trim(), detail:card.detail.trim(), points:card.points, stage:card.stage};
 }
-export function applyChange(stories, change, id) {
+export function applyChange(stories, change, id, author) {
   if (!change || !['add','edit','move'].includes(change.type)) throw new Error('Invalid action.');
   if (change.type === 'add') {
     if (stories.length >= 250) throw new Error('Board is full.');
-    return [...stories, {id, ...validateCard(change.card)}];
+    return [...stories, {id, ...validateCard(change.card), ...(author?{
+      createdByName:author.name, createdByLogin:author.login, createdAt:author.createdAt
+    }:{})}];
   }
   const index = stories.findIndex(item => item.id === change.id);
   if (index < 0) throw new Error('Sticky note not found.');

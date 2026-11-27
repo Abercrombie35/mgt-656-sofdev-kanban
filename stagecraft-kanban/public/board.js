@@ -5,6 +5,15 @@ const feedback=message=>{$('feedback').textContent=message;};
 const total=()=>stories.reduce((n,s)=>n+s.points,0);
 const done=()=>stories.filter(s=>s.stage==='done').reduce((n,s)=>n+s.points,0);
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const authorLabel=s=>`<p style="font-size:11px;margin:5px 0"><span class="points">Added by: ${escape(s.createdByName||'Default')}</span></p>`;
+const issueLink=s=>{
+  if(!Number.isSafeInteger(s.issueNumber)||s.issueNumber<1)return '';
+  const url='https://github.com/tkg9/656Final-daunting-horizon/issues/'+s.issueNumber;
+  const state=s.issueState==='CLOSED'?' · Closed':s.issueState==='OPEN'?' · Open':'';
+  const people=Array.isArray(s.issueAssignees)?s.issueAssignees.filter(x=>typeof x==='string').map(x=>'@'+x).join(', '):'';
+  const related=Array.isArray(s.issueRelated)?s.issueRelated.filter(i=>Number.isSafeInteger(i.number)&&i.number>0).map(i=>`<a href="https://github.com/tkg9/656Final-daunting-horizon/issues/${i.number}" target="_blank" rel="noopener noreferrer">#${i.number} (closed)</a>`).join(', '):'';
+  return `<p><a href="${url}" target="_blank" rel="noopener noreferrer">GitHub #${s.issueNumber}${state} ↗</a>${people?' · '+escape(people):''}${related?'<br>Related: '+related:''}</p>${s.issueBody?`<details><summary>GitHub acceptance criteria</summary><p>${escape(s.issueBody)}</p></details>`:''}`;
+};
 function render(){
   $('progress').textContent=login?`${done()} / ${total()} points complete`:'Sign in to view progress';
   $('story-count').textContent=login?`${stories.length} stories`:'Private board';
@@ -15,7 +24,7 @@ function render(){
   const disabled=busy||!login?'disabled':'';
   $('board').innerHTML=lanes.map(([id,label,cue],i)=>{
     const cards=stories.filter(s=>s.stage===id),pts=cards.reduce((n,s)=>n+s.points,0);
-    return `<div class="lane"><div class="lane-head"><div><b>${label}</b><small>${cue}</small></div><span class="points">${pts} pts</span></div><div class="notes">${cards.map((s)=>`<article class="note ${id}"><div class="note-top"><strong>${escape(s.title)}</strong><span class="points">${escape(s.points)} pts</span></div><p>${escape(s.detail)}</p><div class="note-actions">${i?`<button ${disabled} data-action="move" data-id="${escape(s.id)}" data-stage="${lanes[i-1][0]}">Back</button>`:''}<button ${disabled} data-action="edit" data-id="${escape(s.id)}">Edit</button>${i<3?`<button ${disabled} class="move" data-action="move" data-id="${escape(s.id)}" data-stage="${lanes[i+1][0]}">Move to ${lanes[i+1][1]}</button>`:''}</div></article>`).join('')}</div></div>`;
+    return `<div class="lane"><div class="lane-head"><div><b>${label}</b><small>${cue}</small></div><span class="points">${pts} pts</span></div><div class="notes">${cards.map((s)=>`<article class="note ${id}"><div class="note-top"><strong>${escape(s.title)}</strong><span class="points">${escape(s.points)} pts</span></div>${authorLabel(s)}<p>${escape(s.detail)}</p>${issueLink(s)}<div class="note-actions">${i?`<button ${disabled} data-action="move" data-id="${escape(s.id)}" data-stage="${lanes[i-1][0]}">Back</button>`:''}<button ${disabled} data-action="edit" data-id="${escape(s.id)}">Edit</button>${i<3?`<button ${disabled} class="move" data-action="move" data-id="${escape(s.id)}" data-stage="${lanes[i+1][0]}">Move to ${lanes[i+1][1]}</button>`:''}</div></article>`).join('')}</div></div>`;
   }).join('');
 }
 async function getBoard({quiet=false}={}){
