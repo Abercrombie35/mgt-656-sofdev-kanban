@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>StageCraft Sprint Board</title>
+  <style>
+    :root { --ink:#1f2933; --muted:#667085; --line:#d8dee8; --panel:#f5f7fa; --accent:#2364aa; --yellow:#fff1a8; --blue:#dceeff; --green:#daf5e6; --pink:#ffe1e8; }
+    * { box-sizing:border-box; }
+    body { margin:0; font:14px/1.4 Inter, ui-sans-serif, system-ui, sans-serif; color:var(--ink); background:#fff; }
+    header { display:flex; align-items:flex-start; justify-content:space-between; padding:26px 32px 20px; border-bottom:1px solid var(--line); }
+    h1 { margin:0; font-size:24px; letter-spacing:0; }
+    h2 { margin:0; font-size:16px; }
+    p { margin:4px 0 0; color:var(--muted); }
+    .metrics { display:flex; gap:8px; }
+    .pill { padding:5px 9px; border:1px solid var(--line); border-radius:999px; color:var(--muted); background:#fff; font-size:12px; white-space:nowrap; }
+    .pill.primary { border-color:#b9d3f4; background:#eaf3ff; color:#1e5b9d; }
+    .route { display:grid; grid-template-columns:repeat(4,1fr); margin:20px 32px; border:1px solid var(--line); }
+    .route div { padding:11px 14px; border-right:1px solid var(--line); }
+    .route div:last-child { border-right:0; }
+    .route div.active { background:#eaf3ff; }
+    .route small { display:block; color:var(--muted); font-size:11px; }
+    main { display:grid; grid-template-columns:280px minmax(720px,1fr); gap:24px; padding:0 32px 32px; }
+    .composer { border:1px solid var(--line); border-radius:8px; height:max-content; }
+    .composer h2 { padding:12px 14px; border-bottom:1px solid var(--line); }
+    .form { padding:14px; display:grid; gap:10px; }
+    input, textarea, select { width:100%; padding:8px 9px; font:inherit; color:var(--ink); border:1px solid #bcc6d4; border-radius:5px; background:#fff; }
+    textarea { min-height:78px; resize:vertical; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    button { border:1px solid transparent; border-radius:5px; padding:7px 10px; font:600 12px/1.2 inherit; cursor:pointer; background:transparent; color:#344054; }
+    button.primary { background:var(--accent); color:#fff; }
+    button.secondary { border-color:#b8c5d5; background:#fff; }
+    button:hover { filter:brightness(.97); }
+    .board-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .board-head span { color:var(--muted); font-size:12px; }
+    .board { display:grid; grid-template-columns:repeat(4,minmax(180px,1fr)); gap:12px; }
+    .lane { min-height:370px; background:var(--panel); padding:10px; border-top:3px solid #a6b3c2; }
+    .lane-head { display:flex; justify-content:space-between; gap:6px; align-items:start; padding-bottom:10px; }
+    .lane-head small { display:block; color:var(--muted); font-size:11px; }
+    .points { font-size:11px; color:var(--muted); border:1px solid #cbd5e1; border-radius:999px; padding:2px 6px; background:#fff; }
+    .notes { display:grid; gap:10px; }
+    .note { border:1px solid rgba(57,76,96,.22); border-radius:6px; padding:11px; background:var(--yellow); }
+    .note.ready { background:var(--blue); } .note.building { background:var(--pink); } .note.done { background:var(--green); }
+    .note-top { display:flex; gap:6px; align-items:start; justify-content:space-between; }
+    .note strong { font-size:13px; line-height:1.25; }
+    .note p { margin:8px 0 10px; color:#435468; font-size:12px; }
+    .note-actions { display:flex; align-items:center; gap:3px; flex-wrap:wrap; }
+    .note-actions button { padding:4px 5px; font-size:11px; }
+    .note-actions .move { margin-left:auto; border:1px solid rgba(57,76,96,.28); background:rgba(255,255,255,.6); }
+    dialog { width:430px; border:1px solid var(--line); border-radius:8px; padding:0; box-shadow:0 12px 28px rgba(15,23,42,.18); }
+    dialog::backdrop { background:rgba(15,23,42,.28); }
+    .dialog-title { padding:14px 16px; border-bottom:1px solid var(--line); font-weight:700; }
+    .dialog-body { padding:16px; display:grid; gap:10px; }
+    .dialog-actions { display:flex; justify-content:flex-end; gap:8px; padding:0 16px 16px; }
+    .session { display:flex; align-items:center; gap:12px; padding:10px 32px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+    .session a { color:var(--accent); font-weight:600; }
+    #feedback { color:var(--muted); }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .note p { white-space:pre-wrap; overflow-wrap:anywhere; }
+    .note strong { overflow-wrap:anywhere; }
+    @media(max-width:1050px) { main { grid-template-columns:1fr; } .board { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media(max-width:600px) { header { flex-direction:column; gap:12px; padding:18px; } .route { margin:16px; grid-template-columns:repeat(2,1fr); } main { padding:0 16px 24px; } .board { grid-template-columns:1fr; } .session { padding:10px 16px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div><h1>StageCraft Sprint Board</h1><p>Team daunting-horizon · Theater production management from script to stage.</p></div>
+    <div class="metrics"><span class="pill primary" id="progress"></span><span class="pill" id="story-count"></span></div>
+  </header>
+  <div class="session"><a id="sign-in" href="/api/board?action=login">Sign in with GitHub</a><span id="identity"></span><button id="sign-out" class="secondary" hidden>Sign out</button><a href="https://github.com/tkg9/656Final-daunting-horizon">Project source ↗</a><span id="feedback" role="status" aria-live="polite">Sign in to access the shared board.</span></div>
+  <section class="route">
+    <div><small>Milestone 1</small><b>Foundation & login</b></div><div class="active"><small>Milestone 2</small><b>Production workflows</b></div><div><small>Milestone 3</small><b>Rehearsals & cues</b></div><div><small>Milestone 4</small><b>AI & final QA</b></div>
+  </section>
+  <main>
+    <aside class="composer"><h2>New sticky note</h2><form class="form" id="new-story"><input id="new-title" required maxlength="120" placeholder="User story title"><textarea id="new-detail" maxlength="2000" placeholder="As a director, actor or crew member, I want... so that..."></textarea><div class="form-row"><select id="new-points"><option>1</option><option>2</option><option selected>3</option><option>5</option><option>8</option><option>13</option></select><select id="new-stage"><option value="backlog">Backlog</option><option value="ready">Ready</option><option value="building">Building</option><option value="done">Done</option></select></div><button class="primary" disabled>Add sticky note</button></form></aside>
+    <section><div class="board-head"><h2>Sticky-note board</h2><span>Edit a note or move it through the sprint.</span></div><div class="board" id="board"></div></section>
+  </main>
+  <dialog id="editor"><form method="dialog"><div class="dialog-title">Edit sticky note</div><div class="dialog-body"><input id="edit-title" required><textarea id="edit-detail"></textarea><div class="form-row"><select id="edit-points"><option>1</option><option>2</option><option>3</option><option>5</option><option>8</option><option>13</option></select><select id="edit-stage"><option value="backlog">Backlog</option><option value="ready">Ready</option><option value="building">Building</option><option value="done">Done</option></select></div></div><div class="dialog-actions"><button value="cancel" class="secondary">Cancel</button><button value="save" class="primary">Save sticky</button></div></form></dialog>
+  <script src="/board.js" defer></script>
+</body>
+</html>
